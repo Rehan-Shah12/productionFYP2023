@@ -9,11 +9,17 @@ import scraperRoutes from "./routes/scraperRoute.js";
 import scraper from "./scraper.js";
 import cors from "cors";
 import path from "path";
+import {fileURLToPath} from 'url;
+
 dotenv.config();
 const PORT = process.env.PORT || 8080;
 
 //Databse Config
 connectDB();
+
+//ESModule Fix
+const __fileName = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__fileName);
 
 //middlewares
 const app = express();
