@@ -9,7 +9,7 @@ import scraperRoutes from "./routes/scraperRoute.js";
 import scraper from "./scraper.js";
 import cors from "cors";
 import path from "path";
-import {fileURLToPath} from 'url;
+import {fileURLToPath} from 'url';
 
 dotenv.config();
 const PORT = process.env.PORT || 8080;
