@@ -15,7 +15,7 @@ app.post("/scrape-search", async (req, res) => {
   console.log(query);
 
   const browser = await puppeteer.launch({
-    headless: "new",
+    headless: false,
     ignoreDefaultArgs: ["--disable-extentions"],
     args: ["--no-sandbox"],
   });
@@ -31,12 +31,22 @@ app.post("/scrape-search", async (req, res) => {
   await browser.close();
   console.timeEnd("scrape-search");
 
-  const searchResults = [
-    ...darazProducts,
-    ...eloProducts,
-    ...ishoppingProducts,
-  ];
+  const searchResults = [];
+
+  if (darazProducts.length > 0) {
+    searchResults.push(...darazProducts);
+  }
+
+  if (eloProducts.length > 0) {
+    searchResults.push(...eloProducts);
+  }
+
+  if (ishoppingProducts.length > 0) {
+    searchResults.push(...ishoppingProducts);
+  }
+
   console.timeEnd("scrape-search");
+  // console.log("searchResult:", searchResults);
 
   const jsonData = JSON.stringify(searchResults);
   fs.writeFileSync("search_data.json", jsonData);
@@ -51,138 +61,156 @@ export default app;
 ///////////////////////////////////////////////////////////////////////////////////
 
 async function elo(query, browser) {
-  console.log("elo started");
-  console.time("elo");
+  try {
+    console.log("elo started");
+    console.time("elo");
 
-  const page = await browser.newPage();
-  page.setDefaultNavigationTimeout(0);
+    const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(60000); // Timeout set to 1 minute
 
-  const override = Object.assign(page.viewport(), { width: 1366 });
-  await page.setViewport(override);
+    const override = Object.assign(page.viewport(), { width: 1366 });
+    await page.setViewport(override);
 
-  await page.setUserAgent("UA-TEST");
+    await page.setUserAgent("UA-TEST");
 
-  const url = `https://www.exportleftovers.com/search?q=${query}`;
-  await page.goto(url);
+    const url = `https://www.exportleftovers.com/search?q=${query}`;
+    await page.goto(url);
 
-  await page.waitForSelector("div.search__item.container.has-padding-bottom");
+    await page.waitForSelector("div.search__item.container.has-padding-bottom");
 
-  const html = await page.content();
-  const $ = load(html);
+    const html = await page.content();
+    const $ = load(html);
 
-  const products = [];
+    const products = [];
 
-  $("div.search__item.container.has-padding-bottom:lt(10)").each(
-    (index, element) => {
-      const name = $(element).find("h3.search-result__title > a").text();
-      const price = $(element).find("span.price > span.money").text().trim();
-      const orignalprice = $(element)
-        .find("span.compare-at-price > span.money")
-        .text()
-        .trim();
-      const image = $(element)
-        .find("div.image-element__wrap > img")
-        .attr("data-src");
-      const desc = $(element).find("div.has-padding-top > p").text().trim();
-      const halflink = $(element)
-        .find("h3.search-result__title > a")
-        .attr("href");
-      const link = "https://www.exportleftovers.com" + halflink;
-      const site = "Elo";
-      products.push({ name, price, orignalprice, image, desc, link, site });
-    }
-  );
-  console.timeEnd("elo");
-  return products;
+    $("div.search__item.container.has-padding-bottom:lt(10)").each(
+      (index, element) => {
+        const name = $(element).find("h3.search-result__title > a").text();
+        const price = $(element).find("span.price > span.money").text().trim();
+        const orignalprice = $(element)
+          .find("span.compare-at-price > span.money")
+          .text()
+          .trim();
+        const image = $(element)
+          .find("div.image-element__wrap > img")
+          .attr("data-src");
+        const desc = $(element).find("div.has-padding-top > p").text().trim();
+        const halflink = $(element)
+          .find("h3.search-result__title > a")
+          .attr("href");
+        const link = "https://www.exportleftovers.com" + halflink;
+        const site = "Elo";
+        products.push({ name, price, orignalprice, image, desc, link, site });
+      }
+    );
+    console.timeEnd("elo");
+    return products;
+  } catch (error) {
+    console.log("Elo Error: ", error);
+    return [];
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 
 async function daraz(query, browser) {
-  console.log("Daraz started");
-  console.time("Daraz");
-  const page = await browser.newPage();
-  await page.setDefaultNavigationTimeout(0);
+  try {
+    console.log("Daraz started");
+    console.time("Daraz");
+    const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(60000); // Timeout set to 1 minute
 
-  // Overrides the heights property
-  let override = Object.assign(page.viewport(), { width: 1366 });
-  await page.setViewport(override);
+    // Overrides the heights property
+    let override = Object.assign(page.viewport(), { width: 1366 });
+    await page.setViewport(override);
 
-  // This gives an error for no height
-  // const width = 1024;
-  // await page.setViewport({ width: width });
-  await page.setUserAgent("UA-TEST");
+    // This gives an error for no height
+    // const width = 1024;
+    // await page.setViewport({ width: width });
+    await page.setUserAgent("UA-TEST");
 
-  const url = `https://www.daraz.pk/catalog/?q=${encodeURIComponent(query)}`;
-  await page.goto(url);
+    const url = `https://www.daraz.pk/catalog/?q=${encodeURIComponent(query)}`;
+    await page.goto(url);
 
-  const html = await page.content();
-  const $ = load(html);
+    const html = await page.content();
+    const $ = load(html);
 
-  const products = [];
-  await page.waitForSelector("div.inner--SODwy");
+    const products = [];
+    await page.waitForSelector("div.inner--SODwy");
 
-  $("div.inner--SODwy:lt(10)").each((index, element) => {
-    const name = $(element).find("div.title--wFj93 > a").text().trim();
-    const price = $(element).find("span.currency--GVKjl").text().trim();
-    const image = $(element).find("img.image--WOyuZ ").attr("src");
-    const orignalprice = $(element)
-      .find("span.origPrice--AJxRs > del.currency--GVKjl")
-      .text();
-    const link = $(element).find("div.title--wFj93 > a").attr("href").trim();
-    const site = "Daraz";
+    $("div.inner--SODwy:lt(10)").each((index, element) => {
+      const name = $(element).find("div.title--wFj93 > a").text().trim();
+      const price = $(element).find("span.currency--GVKjl").text().trim();
+      const image = $(element).find("img.image--WOyuZ ").attr("src");
+      const orignalprice = $(element)
+        .find("span.origPrice--AJxRs > del.currency--GVKjl")
+        .text();
+      const link = $(element).find("div.title--wFj93 > a").attr("href").trim();
+      const site = "Daraz";
 
-    products.push({ name, price, orignalprice, image, link, site });
-  });
+      products.push({ name, price, orignalprice, image, link, site });
+    });
 
-  console.timeEnd("Daraz");
+    console.timeEnd("Daraz");
 
-  return products;
+    return products;
+  } catch (error) {
+    console.log("Daraz Error: ", error);
+    return [];
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 
 async function ishopping(query, browser) {
-  console.log("ishopping started");
-  console.time("ishopping");
-  const page = await browser.newPage();
-  await page.setDefaultNavigationTimeout(0);
+  try {
+    console.log("ishopping started");
+    console.time("ishopping");
+    const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(60000); // Timeout set to 1 minute
 
-  // Overrides the hieghts property
-  const override = Object.assign(page.viewport(), { width: 1366 });
-  await page.setViewport(override);
+    // Overrides the hieghts property
+    const override = Object.assign(page.viewport(), { width: 1366 });
+    await page.setViewport(override);
 
-  // This gives an error for no height
-  // const width = 1024;
-  // await page.setViewport({ width: width });
-  await page.setUserAgent("UA-TEST");
+    // This gives an error for no height
+    // const width = 1024;
+    // await page.setViewport({ width: width });
+    await page.setUserAgent("UA-TEST");
 
-  const url = `https://www.ishopping.pk/catalogsearch/result/?q=${query}`;
-  await page.goto(url);
+    const url = `https://www.ishopping.pk/catalogsearch/result/?q=${query}`;
+    await page.goto(url);
 
-  const html = await page.content();
-  const $ = load(html);
-  await page.waitForSelector("li.col-xs-6.col-sm-4.col-md-3.item");
+    const html = await page.content();
+    const $ = load(html);
+    await page.waitForSelector("li.col-xs-6.col-sm-4.col-md-3.item");
 
-  const products = [];
+    const products = [];
 
-  $("li.col-xs-6.col-sm-4.col-md-3.item:lt(10) ").each((index, element) => {
-    const name = $(element).find("h2.product-name > a").text();
-    const price = $(element)
-      .find("p.special-price > span.price, span.regular-price > span.price")
-      .text()
-      .trim();
-    const oldprice = $(element).find("p.old-price > span.price").text().trim();
-    const image = $(element)
-      .find("div.inner-grid > a.product-image > img")
-      .attr("src");
-    //   const desc = $(element).find("div.has-padding-top > p").text().trim();
-    const link = $(element).find("h2.product-name > a").attr("href");
-    const site = "Ishopping";
-    products.push({ name, price, oldprice, image, link, site });
-  });
+    $("li.col-xs-6.col-sm-4.col-md-3.item:lt(10) ").each((index, element) => {
+      const name = $(element).find("h2.product-name > a").text();
+      const price = $(element)
+        .find("p.special-price > span.price, span.regular-price > span.price")
+        .text()
+        .trim();
+      const oldprice = $(element)
+        .find("p.old-price > span.price")
+        .text()
+        .trim();
+      const image = $(element)
+        .find("div.inner-grid > a.product-image > img")
+        .attr("src");
+      //   const desc = $(element).find("div.has-padding-top > p").text().trim();
+      const link = $(element).find("h2.product-name > a").attr("href");
+      const site = "Ishopping";
+      products.push({ name, price, oldprice, image, link, site });
+    });
 
-  console.timeEnd("ishopping");
+    console.timeEnd("ishopping");
 
-  return products;
+    return products;
+  } catch (error) {
+    console.log("Ishopping Error: ", error);
+    return [];
+  }
 }

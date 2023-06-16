@@ -21,35 +21,39 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: true,
+      // required: true,
     },
     city: {
       type: String,
-      required: true,
+      // required: true,
     },
     postcode: {
       type: Number,
-      required: true,
+      // required: true,
     },
     country: {
       type: String,
-      required: true,
+      // required: true,
     },
     state: {
       type: String,
-      required: true,
+      // required: true,
     },
     address: {
       type: String,
-      required: true,
+      // required: true,
     },
     answer: {
       type: String,
-      required: true,
+      // required: true,
     },
     role: {
       type: Number,
       default: 0,
+    },
+    wishlist: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Wishlist",
     },
   },
   { timestamps: true }

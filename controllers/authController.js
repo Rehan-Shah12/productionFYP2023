@@ -20,6 +20,8 @@ export const registerController = async (req, res) => {
       role,
     } = req.body;
 
+    // console.log(req.body);
+
     if (!fname) {
       return res.send({ message: "First Name is Required" });
     }
@@ -32,27 +34,27 @@ export const registerController = async (req, res) => {
     if (!password) {
       return res.send({ message: "Password is Required" });
     }
-    if (!phone) {
-      return res.send({ message: "Phone is Required" });
-    }
-    if (!city) {
-      return res.send({ message: "City is Required" });
-    }
-    if (!postcode) {
-      return res.send({ message: "Postcode is Required" });
-    }
-    if (!country) {
-      return res.send({ message: "Country is Required" });
-    }
-    if (!state) {
-      return res.send({ message: "State is Required" });
-    }
-    if (!address) {
-      return res.send({ message: "Address is Required" });
-    }
-    if (!answer) {
-      return res.send({ message: "Answer is Required" });
-    }
+    // if (!phone) {
+    //   return res.send({ message: "Phone is Required" });
+    // }
+    // if (!city) {
+    //   return res.send({ message: "City is Required" });
+    // }
+    // if (!postcode) {
+    //   return res.send({ message: "Postcode is Required" });
+    // }
+    // if (!country) {
+    //   return res.send({ message: "Country is Required" });
+    // }
+    // if (!state) {
+    //   return res.send({ message: "State is Required" });
+    // }
+    // if (!address) {
+    //   return res.send({ message: "Address is Required" });
+    // }
+    // if (!answer) {
+    //   return res.send({ message: "Answer is Required" });
+    // }
     // if (!role) {
     //   return res.send({ message: "Role is Required" });
     // }
